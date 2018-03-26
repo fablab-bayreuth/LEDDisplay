@@ -1,0 +1,17 @@
+
+- Layout PIN-LED-Mapping
+- C-Array für Lauflicht
+- Lauflicht schneller machen
+- uint16_t für Bit-Map Muster
+- Library installieren
+- INT0 
+- Text (GFX-Fonts)
+- Bitmap
+- Timer2-RTC
+- Uhr
+- Lauftext
+- 
+
+
+oshpark
+

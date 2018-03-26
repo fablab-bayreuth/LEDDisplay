@@ -19,22 +19,37 @@ const uint8_t pm2 [] = {
 
 uint8_t rot;
 
-void setup(void){
-  led.init(); //Set Pins as OUTPUT
-  led.setConf(FIXED_DISPLAY);
-  pinMode(2, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(2), isr_int0, FALLING);
+void initPoints(void){
   for(uint16_t i=0;i<PIXELCOUNT;i++){
     if(i%8>3) led.add((uint16_t) 256*B00000011 + B11000000);
     else led.add((uint16_t) 0);
   }
+  
+}
+
+
+void setup(void){
+  led.init(); //Set Pins as OUTPUT
+  /*
+   * Default Mode of the LED display is
+   * "RUNNING_DISPLAY"
+   * adding something to the display moves existing 
+   * content to the left
+   * 
+   * Here we set mode=FIXED_DISPLAY
+   * Using led.setCursor(pos) + led.add(...) 
+   * overwrites content on a defined position.
+   */
+  led.setConf(FIXED_DISPLAY);
+  pinMode(2, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(2), isr_int0, FALLING);
 
 }
 
 volatile uint8_t int0_flag;
 void isr_int0(void) {
   int0_flag=1;
-  
+  initPoints();
 }
 
 uint16_t pos=PIXELCOUNT-24;
@@ -50,8 +65,10 @@ void loop(void){
         else led.addBitmap(pm2,48);
        if(pos<4){
          led.clear(); 
+         initPoints();
          pos=PIXELCOUNT-24;
        }
+       
     }
     rot++;
     led.setSpeed();

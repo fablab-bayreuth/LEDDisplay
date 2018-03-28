@@ -38,7 +38,7 @@ void loop(void){
   if(int0_flag){
     led.setSpeed();
     led.runningTextPROGMEM(text);
-    led.run(reverse);
+    led.run();
     int0_flag=0;
   }
   if((micros()-led.getLastRotation())>500000){

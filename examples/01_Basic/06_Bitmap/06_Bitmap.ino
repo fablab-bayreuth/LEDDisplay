@@ -1,3 +1,5 @@
+
+#define WAITTIME_MICROSEC 1000 
 #include <LEDDisplay.h>
 
 //Create Instance of LEDArray
@@ -41,8 +43,8 @@ void setup(void){
 }
 
 void loop(void){
-  led.write(bitmap,10);
-  led.write(smiley,16);
+  led.write(bitmap,10,WAITTIME_MICROSEC);
+  led.write(smiley,16,WAITTIME_MICROSEC);
   delay(1);
 }
 

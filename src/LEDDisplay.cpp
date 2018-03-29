@@ -1,4 +1,8 @@
 #include "LEDDisplay.h"
+
+#include <EEPROM.h>
+
+
 LEDArray::LEDArray() {
 }
 
@@ -74,6 +78,8 @@ void LEDArray::print(uint16_t* w, uint16_t l) {
 	}
 }
 
+
+
 LEDDisplay::LEDDisplay() {
 	gfxFont = NULL;
 	wait = 500;
@@ -88,6 +94,11 @@ LEDDisplay::LEDDisplay(const GFXfont *f) {
 	mode = RUNNING_DISPLAY;
 	direction = ANTICLOCKWISE;
 	pixel_count = PIXELCOUNT;
+}
+
+void LEDDisplay::init(){
+	LEDArray::init();
+	readRotationCount();
 }
 
 void LEDDisplay::setFont(const GFXfont *f) {
@@ -202,22 +213,65 @@ void LEDDisplay::addBitmapPROGMEM(uint8_t* bm, uint16_t l, uint8_t mode) {
 	}
 }
 
+void LEDDisplay::addFloat(float f, int8_t width, uint8_t prec, uint8_t mode){
+	dtostrf(f, width, prec, cbuffer);
+	add(cbuffer,mode);
+}
+
+
+void LEDDisplay::addInteger(long l, uint8_t mode){
+	itoa(l, cbuffer, 10);
+	add(cbuffer,mode);
+}
+
 void LEDDisplay::setSpeed(void) {
 	uint16_t px=pixel_count*5/4;
 	wait = (micros() - last_rot) / px - 16;
 	if (wait * px > 200000L)
 		wait = 200000L / px;
 	last_rot = micros();
+	rot_count++;
+	rot_count_save=true;
 }
 
 unsigned long LEDDisplay::getLastRotation(void) {
 	return last_rot;
 }
 
+unsigned long LEDDisplay::getRotationCount(void) {
+	return rot_count;
+}
+
+void LEDDisplay::readRotationCount(void) {
+	uint8_t* p=(uint8_t*)&rot_count;
+	for(uint8_t i=0;i<4;i++){
+		p[i]=EEPROM.read(i);
+	}
+	rot_count_save=false;
+}
+
+void LEDDisplay::saveRotationCount(void) {
+	if(! rot_count_save) return;
+	uint8_t* p=(uint8_t*)&rot_count;
+	for(uint8_t i=0;i<4;i++){
+		EEPROM.update(i,p[i]);
+	}
+	rot_count_save=false;
+}
+
+
+
+float LEDDisplay::getFramesPerSecond(void) {
+	return 1000000.0/(micros()-last_rot);
+}
+
 void LEDDisplay::setCursor(uint16_t p) {
 	if (p >= pixel_count)
 		p = 0;
 	current_pos = p;
+}
+uint16_t LEDDisplay::getCursor(void){
+	return current_pos;
 }
 
 void LEDDisplay::clear(void) {
@@ -340,3 +394,13 @@ bool LEDDisplay::isDoneRunning(void) {
 	return _is_done;
 }
 
+void LEDDisplay::sleep(bool clock_on){
+	  if ((micros() - last_rot) < 500000) return;
+     //no INT for more than 0.5 sec
+	 saveRotationCount();
+     if(clock_on)
+	    Sleep.sleep(TIMER2_ON, SLEEP_MODE_PWR_SAVE);
+     else
+    	 Sleep.sleep();
+
+}

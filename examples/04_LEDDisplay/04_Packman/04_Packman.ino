@@ -1,5 +1,4 @@
 #include <LEDDisplay.h>
-#include <Sleep.h>
 
 //Create Instance of LEDArray
 LEDDisplay led;
@@ -83,10 +82,7 @@ void loop(void) {
     led.run();
     int0_flag = 0;
   }
-  if ((micros() - led.getLastRotation()) > 500000) {
-    //no INT for more than 0.5 sec
-    Sleep.sleep();
-  }
+  led.sleep();
 }
 
 

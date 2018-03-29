@@ -1,5 +1,4 @@
 #include <LEDDisplay.h>
-#include <Sleep.h>
 
 GFXfont* gfxFont = &FreeSerifBold9pt7b;
 //Create Instance of LEDArray
@@ -36,10 +35,7 @@ void loop(void){
     led.run();
     int0_flag=0;
   }
-  if((micros()-led.getLastRotation())>500000){
-    //no INT for more than 0.5 sec
-    Sleep.sleep();
-  } 
+  led.sleep();
 }
 
 

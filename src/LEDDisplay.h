@@ -8,6 +8,7 @@
  #define pgm_read_pointer(addr) ((void *)pgm_read_word(addr))
 #endif
 #include <Arduino.h>
+#include <Sleep.h>
 
 
 #include <gfxfont.h>
@@ -26,6 +27,7 @@
 
 
 const uint8_t LEDArrayPin[] = {4, A0, A1, A2, A3, A4, A5, 13, 12, 11, 10, 9, 8, 7, 6, 5 };
+
 
 
 /*
@@ -69,11 +71,14 @@ there are some functions for running text and bitmap
 class LEDDisplay : public LEDArray {
   private: 
     uint16_t buffer[PIXELCOUNT];
+    char cbuffer[12];
     uint16_t current_pos;
     uint16_t pixel_count;
     GFXfont* gfxFont;
     unsigned long wait;
     unsigned long last_rot;
+    unsigned long rot_count;
+    bool rot_count_save;
     uint8_t direction;
     uint8_t mode;
 
@@ -91,6 +96,13 @@ class LEDDisplay : public LEDArray {
      */
     LEDDisplay();
     LEDDisplay(const GFXfont *f);
+
+    /*
+     * init Display:
+     * set PINs as output, read rot_count from EEPROM
+     */
+    void init(void);
+
     /*
      * Set font pointer
      */
@@ -102,10 +114,10 @@ class LEDDisplay : public LEDArray {
     void setConf(uint8_t mode=RUNNING_DISPLAY, uint16_t width=PIXELCOUNT, uint8_t dir=ANTICLOCKWISE);
 
     /*
-     * Set Cursor
-     * typically used in combination with mode=FIXED_DISPLAY
+     * Set/Get Cursor
      */
     void setCursor(uint16_t p);
+    uint16_t getCursor(void);
 
     /*
      * Clears the display buffer
@@ -119,9 +131,22 @@ class LEDDisplay : public LEDArray {
     void setSpeed(void);
 
     /*
+     * Calculate last Frames/s value
+     * This has to be called directly before setSpeed()
+     */
+    float getFramesPerSecond();
+
+   /*
      * Give the last rotation time im µs
      */
     unsigned long getLastRotation();
+
+    /*
+     * Methods for getting, reading and saving rotation counts to EEPROM
+     */
+    unsigned long getRotationCount();
+    void saveRotationCount();
+    void readRotationCount();
 
     /*
      * Prints out the buffer content with the calculated frequency
@@ -145,6 +170,9 @@ class LEDDisplay : public LEDArray {
     void add(uint16_t* w, uint16_t l, uint8_t mode=MODE_OVERWRITE);
     void addBitmap(uint8_t* bm, uint16_t l, uint8_t mode=MODE_OVERWRITE);
     void addBitmapPROGMEM(uint8_t* bm, uint16_t l, uint8_t mode=MODE_OVERWRITE);
+    void addFloat(float f, int8_t width=0, uint8_t prec=2, uint8_t mode=MODE_OVERWRITE);
+    void addInteger(long l, uint8_t mode=MODE_OVERWRITE);
+
 
     /*
      * Running Display Methods
@@ -167,6 +195,8 @@ class LEDDisplay : public LEDArray {
     void runningTextPROGMEM(const char* text);
     void runningBitmapPROGMEM(const uint8_t* bitmap, uint16_t bitmap_length);
     
+    void sleep(bool clock_on=false);
+
 };
 
 

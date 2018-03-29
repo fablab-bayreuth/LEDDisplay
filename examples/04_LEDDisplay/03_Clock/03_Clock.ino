@@ -1,5 +1,4 @@
 #include <LEDDisplay.h>
-#include <Sleep.h>
 #include <RTClib.h>
 
 
@@ -92,6 +91,7 @@ void setup(void) {
 
     }
     delay(1000);
+    Serial.end();
 
   }
 
@@ -109,10 +109,7 @@ void loop(void) {
     //clear INT0 flag
     int0_flag = 0;
   }
-  if ((micros() - led.getLastRotation()) > 500000) {
-    //no INT for more than 0.5 sec
-    Sleep.sleep(TIMER2_ON, SLEEP_MODE_PWR_SAVE);    // sleep function called here
-  }
+  led.sleep(true); //Sleep but leave clock on
 }
 
 

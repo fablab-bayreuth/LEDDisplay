@@ -1,7 +1,14 @@
+/*
+   Alles was geht :-)
+
+   Mehr Platz hat der Arduino nicht!
+
+
+*/
+
 #include <LEDDisplay.h>
 #include <RTClib.h>
 
-#include "bitmaps.h"
 
 RTC_Timer2 RTC;
 
@@ -24,47 +31,25 @@ uint16_t rot_mode;
 //Create Instance of LEDArray
 LEDDisplay led(gfxFont);
 
+#include "bitmaps.h"
+#include "anhalter.h"
+#include "genesis_anfang.h"
+#include "rtc_func.h"
+#include "zug_lang.h"
+#include <wuerfel.h>
+
+
 volatile uint8_t int0_flag;
 void isr_int0(void) {
   int0_flag = 1;
 }
 
-//Helper Function for now2text
-void i2str(uint16_t i, unsigned char* b) {
-  if (i < 10) {
-    b[0] = '0';
-    b++;
-  }
-  itoa(i, b, 10);
-}
-
-DateTime dt;
-char text[] = "HH:MI:SS -- DD.MM.YYYY  ";
-
-//gets time from RTC and formats it into the text array
-void now2text(void) {
-  dt = RTC.now();
-  //Format the time-string
-  i2str(dt.hour(), text);
-  text[2] = ':';
-  i2str(dt.minute(), text + 3);
-  text[5] = ':';
-  i2str(dt.second(), text + 6);
-  text[8] = ' ';
-  i2str(dt.day(), text + 12);
-  text[14] = '.';
-  i2str(dt.month(), text + 15);
-  text[17] = '.';
-  i2str(dt.year(), text + 18);
-
-}
-
-int shift_speed = 100;
+int shift_speed = 50;
 uint8_t shift = 6;
 
 
 const char rtext[] PROGMEM = "Fablab Bayreuth --- Arduino Day 2018 --- 07.04.2018";
-uint8_t tshift = 2;
+uint8_t tshift = 1;
 
 #include <math.h>
 float ntc10_R2T(float r) {
@@ -72,6 +57,7 @@ float ntc10_R2T(float r) {
   return 440.61073 - 75.69303 * log_r +
          4.20199 * log_r * log_r - 0.09586 * log_r * log_r * log_r;
 }
+
 
 
 void setup(void) {
@@ -121,25 +107,43 @@ void setup(void) {
 }
 
 uint16_t text_end_pos, pm_pos;
-
+uint8_t wert = 0;
+uint8_t schritt = 9;
+unsigned long last_int0;
 float temp;
 void loop(void) {
   if (int0_flag) {
+    if (led.wokeupFromSleep()) {
+      if ((RTC.now().get() - last_int0) > 5) {
+        led.clear();
+        led.initRunning(shift, shift_speed);
+        mode = 0; //Neustart nach Schlafmode
+      }
+    }
     float temp_float = led.getFramesPerSecond();
     led.setSpeed();
-
+    last_int0 = RTC.now().get();
     if (last_mode != mode) {
       //Initialisierungen für die verschiedenen Anzeigen-Modi
       last_mode = mode;
       led.clear();
       switch (mode) {
+        case 0:
+          led.setFont(gfxFont);
+          break;
         case 1:
           led.setFont(gfxFont2);
           led.add("Rotations: ");
           break;
         case 2:
           led.setFont(gfxFont);
-          led.add("Frames/s: ");
+          led.add("Temperatur C: ");
+          digitalWrite(13, HIGH);
+          temp = 20000.0 / (1023.0 / analogRead(A6) - 1);
+          digitalWrite(13, LOW);
+          //Umrechnen in Temperatur
+          temp = ntc10_R2T(temp);
+
           break;
         case 3:
           led.setFont(gfxFont2);
@@ -147,13 +151,7 @@ void loop(void) {
           break;
         case 4:
           led.setFont(gfxFont);
-          led.add("Temp C: ");
-          digitalWrite(13, HIGH);
-          temp = 20000.0 / (1023.0 / analogRead(A6) - 1);
-          digitalWrite(13, LOW);
-          //Umrechnen in Temperatur
-          temp = ntc10_R2T(temp);
-
+          led.add("Frames/s: ");
           break;
         case 5:
           led.initRunning(shift, shift_speed);
@@ -163,12 +161,36 @@ void loop(void) {
           break;
         case 7:
           for (uint16_t i = 0; i < PIXELCOUNT; i++) {
-            if (i % 8 > 3) led.add((uint16_t) 256 * B00000011 + B11000000);
+            if (i % 8 > 3) led.add((uint16_t) 256 * B00000001 + B10000000);
             else led.add((uint16_t) 0);
           }
           led.setConf(FIXED_DISPLAY);
           pm_pos = PIXELCOUNT - 24;
           break;
+        case 8:
+          led.setConf(FIXED_DISPLAY, 160);
+          randomSeed(millis());
+          wert = 1;
+          pm_pos = 0;
+          schritt = 9;
+          led.clear();
+          break;
+        case 9:
+          led.initRunning(shift, shift_speed);
+          break;
+        case 10:
+          led.setFont(gfxFont2);
+          led.initRunning(tshift, shift_speed);
+          break;
+        case 12:
+          led.setFont(gfxFont2);
+          led.initRunning(tshift, shift_speed);
+          break;
+        case 13:
+          led.setFont(gfxFont2);
+          led.initRunning(tshift, shift_speed);
+          break;
+
       }
 
       rot_mode = 0;
@@ -181,27 +203,27 @@ void loop(void) {
         //write the time-string to LED
         led.setCursor(0);
         led.add(text);
-        if (rot_mode > 40) mode++;
+        if (rot_mode > 30) mode++;
         break;
       case 1:
         led.setCursor(text_end_pos);
         led.addInteger(led.getRotationCount());
-        if (rot_mode > 40) mode++;
+        if (rot_mode > 30) mode++;
         break;
       case 2:
         led.setCursor(text_end_pos);
-        led.addFloat(temp_float, 4, 1);
-        if (rot_mode > 40) mode++;
+        led.addFloat(temp, 4, 1);
+        if (rot_mode > 30) mode++;
         break;
       case 3:
         led.setCursor(text_end_pos);
         led.addInteger(millis() / 1000);
-        if (rot_mode > 40) mode++;
+        if (rot_mode > 30) mode++;
         break;
       case 4:
         led.setCursor(text_end_pos);
-        led.addFloat(temp, 4, 1);
-        if (rot_mode > 40) mode++;
+        led.addFloat(temp_float, 4, 1);
+        if (rot_mode > 30) mode++;
         break;
       case 5:
         led.runningBitmapPROGMEM(bitmap, bm_length);
@@ -238,12 +260,77 @@ void loop(void) {
         }
 
         break;
+      case 8:
+        if (wert) {
+          led.setCursor(pm_pos);
+          led.clear(10);
+
+          //move  schritt px to the right
+          pm_pos += schritt;
+          led.setCursor(pm_pos);
+
+          if (pm_pos < (160 - 24)) {
+            if (rot_mode % 4) {
+              printWuerfelRollend(rot_mode % 4);
+            } else {
+              led.setCursor(pm_pos + 2);
+              wert = random(1, 7);
+              printWuerfel(wert);
+              schritt--;
+            }
+          } else {
+            if (wert) {
+              printWuerfel(wert);
+              wert = 0;
+            }
+          }
+        }
+
+        if (rot_mode > 35) {
+          mode++;
+          led.setConf();
+        }
+        break;
+      case 9:
+        led.runningBitmapPROGMEM(zug_lang, 522 * 2);
+        if (led.isDoneRunning()) {
+          mode++;
+        }
+        break;
+      case 10:
+        led.runningTextPROGMEM(anhalter1);
+        if (led.isDoneRunning()) {
+          mode++;
+        }
+        break;
+      case 11:
+        if (rot_mode % 4 == 0) {
+          if (rot_mode % 8 == 0) {
+            led.setCursor(0);
+            led.add("DON'T PANIC!!   ");
+          } else led.clear();
+        }
+        if (rot_mode > 60) mode++;
+        break;
+      case 12:
+        led.runningTextPROGMEM(anhalter2);
+        if (led.isDoneRunning()) {
+          mode++;
+        }
+        break;
+      case 13:
+        led.runningTextPROGMEM(genesis);
+        if (led.isDoneRunning()) {
+          mode++;
+        }
+        break;
+
 
     }
     led.run();
 
 
-    if (mode > 7) mode = 0;
+    if (mode > 13) mode = 0;
 
     //rotations in current mode
     rot_mode++;

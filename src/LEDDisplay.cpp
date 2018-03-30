@@ -110,7 +110,7 @@ void LEDDisplay::setConf(uint8_t m, uint16_t pc, uint8_t d) {
 	direction = d;
 	if (pc > PIXELCOUNT)
 		pc = PIXELCOUNT;
-
+	wait=(wait*pixel_count)/pc;
 	pixel_count = pc;
 }
 
@@ -207,8 +207,8 @@ void LEDDisplay::addBitmap(uint8_t* bm, uint16_t l, uint8_t mode) {
 void LEDDisplay::addBitmapPROGMEM(uint8_t* bm, uint16_t l, uint8_t mode) {
 	uint16_t v;
 	for (uint16_t i = 0; i < l / 2; i++) {
-		*(((uint8_t*) &v)) = pgm_read_byte(i);
-		*(((uint8_t*) &v) + 1) = pgm_read_byte(i + l / 2);
+		*(((uint8_t*) &v)) = pgm_read_byte(bm+i);
+		*(((uint8_t*) &v) + 1) = pgm_read_byte(bm+i + l / 2);
 		add(v, mode);
 	}
 }
@@ -220,7 +220,7 @@ void LEDDisplay::addFloat(float f, int8_t width, uint8_t prec, uint8_t mode){
 
 
 void LEDDisplay::addInteger(long l, uint8_t mode){
-	itoa(l, cbuffer, 10);
+	ltoa(l, cbuffer, 10);
 	add(cbuffer,mode);
 }
 
@@ -398,9 +398,14 @@ void LEDDisplay::sleep(bool clock_on){
 	  if ((micros() - last_rot) < 500000) return;
      //no INT for more than 0.5 sec
 	 saveRotationCount();
+
      if(clock_on)
 	    Sleep.sleep(TIMER2_ON, SLEEP_MODE_PWR_SAVE);
      else
     	 Sleep.sleep();
 
+}
+
+bool LEDDisplay::wokeupFromSleep(void){
+	return (! rot_count_save);
 }

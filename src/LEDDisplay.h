@@ -197,6 +197,8 @@ class LEDDisplay : public LEDArray {
     
     void sleep(bool clock_on=false);
 
+    bool wokeupFromSleep(void);
+
 };
 
 

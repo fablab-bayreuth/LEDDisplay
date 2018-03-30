@@ -117,7 +117,7 @@ void loop(void) {
       if ((RTC.now().get() - last_int0) > 5) {
         led.clear();
         led.initRunning(shift, shift_speed);
-        mode = 0; //Neustart nach Schlafmode
+        mode = 0; //Neustart nach Schlafmode > 5 Sec
       }
     }
     float temp_float = led.getFramesPerSecond();

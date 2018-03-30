@@ -25,7 +25,7 @@ void isr_int0(void) {
 void initPoints(void) {
   led.clear();
   for (uint16_t i = 0; i < PIXELCOUNT; i++) {
-    if (i % 8 > 3) led.add((uint16_t) 256 * B00000011 + B11000000);
+    if (i % 8 > 3) led.add((uint16_t) 256 * B00000001 + B10000000);
     else led.add((uint16_t) 0);
   }
 

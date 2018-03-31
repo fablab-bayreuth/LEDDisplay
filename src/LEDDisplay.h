@@ -81,6 +81,7 @@ class LEDDisplay : public LEDArray {
     bool rot_count_save;
     uint8_t direction;
     uint8_t mode;
+    uint8_t _utf8_c;
 
  //Variables for running Text+Bitmap    
     uint8_t _shift;

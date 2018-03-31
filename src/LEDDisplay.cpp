@@ -2,7 +2,6 @@
 
 #include <EEPROM.h>
 
-
 LEDArray::LEDArray() {
 }
 
@@ -78,8 +77,6 @@ void LEDArray::print(uint16_t* w, uint16_t l) {
 	}
 }
 
-
-
 LEDDisplay::LEDDisplay() {
 	gfxFont = NULL;
 	wait = 500;
@@ -96,7 +93,7 @@ LEDDisplay::LEDDisplay(const GFXfont *f) {
 	pixel_count = PIXELCOUNT;
 }
 
-void LEDDisplay::init(){
+void LEDDisplay::init() {
 	LEDArray::init();
 	readRotationCount();
 }
@@ -110,7 +107,7 @@ void LEDDisplay::setConf(uint8_t m, uint16_t pc, uint8_t d) {
 	direction = d;
 	if (pc > PIXELCOUNT)
 		pc = PIXELCOUNT;
-	wait=(wait*pixel_count)/pc;
+	wait = (wait * pixel_count) / pc;
 	pixel_count = pc;
 }
 
@@ -134,8 +131,46 @@ void LEDDisplay::add(uint16_t w, uint8_t mode) {
 }
 
 uint8_t LEDDisplay::add(char c, uint8_t mode) {
+	uint8_t width;
+	bool umlaut=true;
 	if (gfxFont == NULL)
 		return 0;
+	if ((uint8_t) c == 0xc3) {
+		_utf8_c = 1;
+		return 0;
+	}
+	if (_utf8_c) {
+		//c3 a4 c3 b6 c3 bc c3 84 c3 96
+		//c3 9c c3 9f
+
+		switch ((uint8_t) c) {
+		case 0xa4: //ä
+			c = 'a';
+			break;
+		case 0xb6: //ö
+			c = 'o';
+			break;
+		case 0xbc: //ü
+			c = 'u';
+			break;
+		case 0x84: //Ä
+			c = 'A';
+			break;
+		case 0x96: //Ö
+			c = 'O';
+			break;
+		case 0x9c: //Ü
+			c = 'U';
+			break;
+		case 0x9f: //ß
+			c = 's';
+			umlaut=false;
+			break;
+		default:
+			c = '8';
+			_utf8_c = 0;
+		}
+	}
 	if (c < (uint8_t) pgm_read_byte(&gfxFont->first))
 		return 0;
 	if (c > (uint8_t) pgm_read_byte(&gfxFont->last))
@@ -149,7 +184,7 @@ uint8_t LEDDisplay::add(char c, uint8_t mode) {
 	uint8_t w = pgm_read_byte(&glyph->width), h = pgm_read_byte(&glyph->height);
 	int8_t xo = pgm_read_byte(&glyph->xOffset), yo = pgm_read_byte(
 			&glyph->yOffset);
-	uint8_t width = pgm_read_byte(&glyph->xAdvance) + 1;
+	width = pgm_read_byte(&glyph->xAdvance) + 1;
 	uint8_t xx, yy, bits = 0, bit = 0;
 
 	//        Serial.println(c);
@@ -174,6 +209,18 @@ uint8_t LEDDisplay::add(char c, uint8_t mode) {
 			}
 			bits <<= 1;
 		}
+	}
+	if (_utf8_c) {
+		if (! umlaut) {
+			char_buffer[xo+1] |= 0xfff0 << (9 + yo);
+			char_buffer[xo+2] &= 0x000f << (9 + yo);
+		} else {
+			char_buffer[xo] |= 0x1 << (9 + yo);
+			char_buffer[xo + 1] |= 0x1 << (9 + yo);
+			char_buffer[xo + w - 2] |= 0x1 << (9 + yo);
+			char_buffer[xo + w - 1] |= 0x1 << (9 + yo);
+		}
+		_utf8_c = 0;
 	}
 	for (xx = 0; xx < width; xx++) {
 		add(char_buffer[xx], mode);
@@ -207,31 +254,30 @@ void LEDDisplay::addBitmap(uint8_t* bm, uint16_t l, uint8_t mode) {
 void LEDDisplay::addBitmapPROGMEM(uint8_t* bm, uint16_t l, uint8_t mode) {
 	uint16_t v;
 	for (uint16_t i = 0; i < l / 2; i++) {
-		*(((uint8_t*) &v)) = pgm_read_byte(bm+i);
-		*(((uint8_t*) &v) + 1) = pgm_read_byte(bm+i + l / 2);
+		*(((uint8_t*) &v)) = pgm_read_byte(bm + i);
+		*(((uint8_t*) &v) + 1) = pgm_read_byte(bm + i + l / 2);
 		add(v, mode);
 	}
 }
 
-void LEDDisplay::addFloat(float f, int8_t width, uint8_t prec, uint8_t mode){
+void LEDDisplay::addFloat(float f, int8_t width, uint8_t prec, uint8_t mode) {
 	dtostrf(f, width, prec, cbuffer);
-	add(cbuffer,mode);
+	add(cbuffer, mode);
 }
 
-
-void LEDDisplay::addInteger(long l, uint8_t mode){
+void LEDDisplay::addInteger(long l, uint8_t mode) {
 	ltoa(l, cbuffer, 10);
-	add(cbuffer,mode);
+	add(cbuffer, mode);
 }
 
 void LEDDisplay::setSpeed(void) {
-	uint16_t px=pixel_count*5/4;
+	uint16_t px = pixel_count * 5 / 4;
 	wait = (micros() - last_rot) / px - 16;
 	if (wait * px > 200000L)
 		wait = 200000L / px;
 	last_rot = micros();
 	rot_count++;
-	rot_count_save=true;
+	rot_count_save = true;
 }
 
 unsigned long LEDDisplay::getLastRotation(void) {
@@ -243,26 +289,25 @@ unsigned long LEDDisplay::getRotationCount(void) {
 }
 
 void LEDDisplay::readRotationCount(void) {
-	uint8_t* p=(uint8_t*)&rot_count;
-	for(uint8_t i=0;i<4;i++){
-		p[i]=EEPROM.read(i);
+	uint8_t* p = (uint8_t*) &rot_count;
+	for (uint8_t i = 0; i < 4; i++) {
+		p[i] = EEPROM.read(i);
 	}
-	rot_count_save=false;
+	rot_count_save = false;
 }
 
 void LEDDisplay::saveRotationCount(void) {
-	if(! rot_count_save) return;
-	uint8_t* p=(uint8_t*)&rot_count;
-	for(uint8_t i=0;i<4;i++){
-		EEPROM.update(i,p[i]);
+	if (!rot_count_save)
+		return;
+	uint8_t* p = (uint8_t*) &rot_count;
+	for (uint8_t i = 0; i < 4; i++) {
+		EEPROM.update(i, p[i]);
 	}
-	rot_count_save=false;
+	rot_count_save = false;
 }
 
-
-
 float LEDDisplay::getFramesPerSecond(void) {
-	return 1000000.0/(micros()-last_rot);
+	return 1000000.0 / (micros() - last_rot);
 }
 
 void LEDDisplay::setCursor(uint16_t p) {
@@ -270,7 +315,7 @@ void LEDDisplay::setCursor(uint16_t p) {
 		p = 0;
 	current_pos = p;
 }
-uint16_t LEDDisplay::getCursor(void){
+uint16_t LEDDisplay::getCursor(void) {
 	return current_pos;
 }
 
@@ -319,9 +364,11 @@ void LEDDisplay::runningText(const char* text) {
 	if (((uint16_t) millis() - _last_shift) > _shift_wait) {
 		for (uint8_t i = 0; i < _shift; i++) {
 			if (offset >= 0) {
-				if (text[offset])
-					add(text[offset]);
-				else {
+				if (text[offset]) {
+					while (text[offset] && !add(text[offset])) {
+						offset++;
+					}
+				} else {
 					offset = -100;
 					last_run_pos = current_pos;
 				}
@@ -345,9 +392,13 @@ void LEDDisplay::runningTextPROGMEM(const char* text) {
 		for (uint8_t i = 0; i < _shift; i++) {
 			if (offset >= 0) {
 				char c = pgm_read_byte(text + offset);
-				if (c)
-					add(c);
-				else {
+
+				if (c) {
+					while (!add(c) && c) {
+						offset++;
+						c = pgm_read_byte(text + offset);
+					}
+				} else {
 					offset = -100;
 					last_run_pos = current_pos;
 				}
@@ -394,18 +445,19 @@ bool LEDDisplay::isDoneRunning(void) {
 	return _is_done;
 }
 
-void LEDDisplay::sleep(bool clock_on){
-	  if ((micros() - last_rot) < 500000) return;
-     //no INT for more than 0.5 sec
-	 saveRotationCount();
+void LEDDisplay::sleep(bool clock_on) {
+	if ((micros() - last_rot) < 500000)
+		return;
+	//no INT for more than 0.5 sec
+	saveRotationCount();
 
-     if(clock_on)
-	    Sleep.sleep(TIMER2_ON, SLEEP_MODE_PWR_SAVE);
-     else
-    	 Sleep.sleep();
+	if (clock_on)
+		Sleep.sleep(TIMER2_ON, SLEEP_MODE_PWR_SAVE);
+	else
+		Sleep.sleep();
 
 }
 
-bool LEDDisplay::wokeupFromSleep(void){
-	return (! rot_count_save);
+bool LEDDisplay::wokeupFromSleep(void) {
+	return (!rot_count_save);
 }

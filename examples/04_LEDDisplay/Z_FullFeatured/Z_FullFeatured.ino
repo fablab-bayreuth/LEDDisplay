@@ -36,6 +36,7 @@ LEDDisplay led(gfxFont);
 #include "genesis_anfang.h"
 #include "rtc_func.h"
 #include "zug_lang.h"
+#include "pm.h"
 #include <wuerfel.h>
 
 
@@ -118,6 +119,7 @@ void loop(void) {
         led.clear();
         led.initRunning(shift, shift_speed);
         mode = 0; //Neustart nach Schlafmode > 5 Sec
+        led.setConf();
       }
     }
     float temp_float = led.getFramesPerSecond();
@@ -160,12 +162,12 @@ void loop(void) {
           led.initRunning(tshift, shift_speed);
           break;
         case 7:
-          for (uint16_t i = 0; i < PIXELCOUNT; i++) {
-            if (i % 8 > 3) led.add((uint16_t) 256 * B00000001 + B10000000);
+          for (uint16_t i = 0; i < 160; i++) {
+            if (i % 4 > 1) led.add((uint16_t) 256 * B00000001 + B10000000);
             else led.add((uint16_t) 0);
           }
-          led.setConf(FIXED_DISPLAY);
-          pm_pos = PIXELCOUNT - 24;
+          led.setConf(FIXED_DISPLAY, 160);
+          pm_pos = 160 - 16;
           break;
         case 8:
           led.setConf(FIXED_DISPLAY, 160);
@@ -176,6 +178,7 @@ void loop(void) {
           led.clear();
           break;
         case 9:
+          led.setConf();
           led.initRunning(shift, shift_speed);
           break;
         case 10:
@@ -238,25 +241,28 @@ void loop(void) {
         }
         break;
       case 7:
-        if (rot_mode % 2 == 0) {
-          //clear last 8px of old packman
-          led.setCursor(pm_pos + 16);
+
+        //clear last 8px of old packman
+        led.setCursor(pm_pos + 12);
+        led.clear(4);
+        //move 4px to the left
+        pm_pos -= 4;
+        led.setCursor(pm_pos);
+        //Add open or closed mouth packman
+        if (rot_mode % 4 == 0 ) led.addBitmapPROGMEM(pm_1, 32);
+        else if (rot_mode % 4 == 2) led.addBitmapPROGMEM(pm_3, 32);
+        else led.addBitmapPROGMEM(pm_2, 32);
+
+
+        if ((pm_pos * 2) < (160 - 32)) {
+          led.setCursor(pm_pos * 2 + 32);
           led.clear(8);
-
-          //move 8px to the left
-          pm_pos -= 8;
-          led.setCursor(pm_pos);
-
-          //Add open or closed mouth packman
-          if (rot_mode % 4 == 0 ) led.addBitmap(pm1, 48);
-          else led.addBitmap(pm2, 48);
-
-          //We got to the end...
-          if (pm_pos < 4) {
-            led.setConf();
-            mode++;
-          }
-
+          led.setCursor(pm_pos * 2 + 16);
+          led.addBitmapPROGMEM(geist, 32);
+        }
+        //We got to the end...
+        if (pm_pos < 4) {
+          mode++;
         }
 
         break;
@@ -288,7 +294,6 @@ void loop(void) {
 
         if (rot_mode > 35) {
           mode++;
-          led.setConf();
         }
         break;
       case 9:

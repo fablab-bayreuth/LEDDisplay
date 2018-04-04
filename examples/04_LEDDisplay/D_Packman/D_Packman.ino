@@ -3,19 +3,10 @@
 //Create Instance of LEDArray
 LEDDisplay led;
 
-//Two packman bitmaps 
-const uint8_t pm1 [] = {
-  0x60, 0xF8, 0x7C, 0x7E, 0xFE, 0x7E, 0xFE, 0x7F, 0xFF, 0x67, 0xE7, 0xE7, 0xFF, 0xFF, 0xFF, 0xFF,
-  0xFF, 0xFF, 0xFF, 0xFE, 0xFE, 0xFC, 0xF8, 0x80, 0x03, 0x07, 0x1F, 0x3F, 0x7F, 0x7F, 0x7F, 0xFF,
-  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x7F, 0x3F, 0x1F, 0x1F
-};
-const uint8_t pm2 [] = {
-  0x00, 0x00, 0x04, 0x0E, 0x1E, 0x3E, 0x3E, 0x7F, 0x7F, 0x67, 0x67, 0x67, 0xFF, 0xFF, 0xFF, 0xFF,
-  0xFF, 0xFF, 0xFF, 0xFE, 0xFE, 0xFC, 0xF8, 0x80, 0x00, 0x04, 0x1C, 0x3C, 0x7E, 0x7E, 0x7E, 0xFE,
-  0xFE, 0xFE, 0xFE, 0xFE, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x7F, 0x3F, 0x1F, 0x1F
-};
+//Three packman bitmaps + Ghost
+#include "pm.h" 
 
-
+#define WIDTH 160
 
 volatile uint8_t int0_flag;
 void isr_int0(void) {
@@ -24,8 +15,8 @@ void isr_int0(void) {
 
 void initPoints(void) {
   led.clear();
-  for (uint16_t i = 0; i < PIXELCOUNT; i++) {
-    if (i % 8 > 3) led.add((uint16_t) 256 * B00000001 + B10000000);
+  for (uint16_t i = 0; i < WIDTH; i++) {
+    if (i % 4 > 1) led.add((uint16_t) 256 * B00000001 + B10000000);
     else led.add((uint16_t) 0);
   }
 
@@ -44,7 +35,7 @@ void setup(void) {
      Using led.setCursor(pos) + led.add(...)
      overwrites content on a defined position.
   */
-  led.setConf(FIXED_DISPLAY);
+  led.setConf(FIXED_DISPLAY,WIDTH);
   pinMode(2, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(2), isr_int0, FALLING);
   initPoints();
@@ -52,30 +43,35 @@ void setup(void) {
 }
 
 
-uint16_t pos = PIXELCOUNT - 24;
+uint16_t pos = WIDTH - 16;
 uint8_t rot;
 
 void loop(void) {
   if (int0_flag) {
-    if (rot % 2 == 0) {
-      //clear last 8px of old packman
-      led.setCursor(pos + 16);
-      led.clear(8);
-      
-      //move 8px to the left
-      pos -= 8;
-      led.setCursor(pos);
-      
-      //Add open or closed mouth packman
-      if (rot % 4 == 0 ) led.addBitmap(pm1, 48);
-      else led.addBitmap(pm2, 48);
+    //clear last 8px of old packman
+    led.setCursor(pos + 12);
+    led.clear(4);
+    //move 4px to the left
+    pos -= 4;
+    led.setCursor(pos);
+    //Add open or closed mouth packman
+    if (rot % 4 == 0 ) led.addBitmapPROGMEM(pm_1, 32);
+    else if(rot % 4 == 2) led.addBitmapPROGMEM(pm_3,32);
+    else led.addBitmapPROGMEM(pm_2, 32);
 
-      //We got to the end...
-      if (pos < 4) {
-        initPoints();
-        pos = PIXELCOUNT - 24;
-      }
-
+    
+    if((pos*2)<(WIDTH-32)){
+     led.setCursor(pos*2 + 32);
+     led.clear(8);
+     led.setCursor(pos*2+16);
+     led.addBitmapPROGMEM(geist,32);
+     
+      
+    }
+    //We got to the end...
+    if (pos < 4) {
+       initPoints();
+       pos = WIDTH - 16;
     }
     rot++;
     led.setSpeed();

@@ -53,8 +53,7 @@ Es wurde Abend und es wurde Morgen: fünfter Tag.\
     \
 Dann sprach Gott: Das Land bringe alle Arten von lebendigen Wesen hervor, von Vieh, von Kriechtieren und von Tieren des Feldes. So geschah es.\
     \
-Gott machte alle Arten von Tieren des Feldes, alle Arten von Vieh und alle Arten von Kriechtieren auf dem Erdboden. Gott sah, dass es gut war.\
-    \
-  .... \
-Respekt - Durchgehalten. Jetzt fange ich von vorne an :-)))";
+Gott machte alle Arten von Tieren des Feldes, alle Arten von Vieh und alle Arten von Kriechtieren auf dem Erdboden. Doch am Ende des fünften Tages merkte Gott, dass \
+auch für ihn die Speichergrenzen des ATMegas gelten. Er blickte auf den kleinen Prozessor, auf des näher rückende Ende des 30720 Byte großen Flash Speichers. Gott schaute auf das Programm, Gott sah, dass es gut war\
+ und er beschloss die Erschaffung des Menschens zu verschieben. Bis dahin wollter er sich das Programm nochmals anschauen.";
 

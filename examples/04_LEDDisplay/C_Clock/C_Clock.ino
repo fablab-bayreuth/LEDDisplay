@@ -12,13 +12,8 @@ ISR(TIMER2_OVF_vect) {
 //GFXfont* gfxFont = &FreeMonoBoldOblique9pt7b;
 GFXfont* gfxFont = &FreeMonoBold9pt7b;
 //GFXfont* gfxFont = &FreeSerifBold9pt7b;
-//Create Instance of LEDArray
-LEDDisplay led(gfxFont);
-
-volatile uint8_t int0_flag;
-void isr_int0(void) {
-  int0_flag = 1;
-}
+//Create Instance of LEDDisplay
+LEDDisplay led;
 
 //Helper Function for now2text
 void i2str(uint16_t i, unsigned char* b) {
@@ -52,11 +47,8 @@ void now2text(void) {
 }
 
 void setup(void) {
-  led.init(); //Set Pins as OUTPUT
-
-  //Set up Interrupt
-  pinMode(2, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(2), isr_int0, FALLING);
+  led.begin();
+  led.setFont(gfxFont);
 
   //init timer2 to 1 sec for RTC increment
   Sleep.setupTimer2();
@@ -64,8 +56,8 @@ void setup(void) {
   //Serial clock adjustment stuff
   //Program stays in this loop until INT0 is fired
   Serial.begin(9600);
-  int0_flag = 0;
-  while (! int0_flag) {
+  led.int0_flag = 0;
+  while (! led.int0_flag) {
     Serial.print("Current time: ");
     now2text();
     Serial.println(text);
@@ -98,7 +90,7 @@ void setup(void) {
 }
 
 void loop(void) {
-  if (int0_flag) {
+  if (led.int0_flag) {
     led.setSpeed();
     //get time from Clock
     now2text();
@@ -107,7 +99,7 @@ void loop(void) {
     led.add(text);
     led.run();
     //clear INT0 flag
-    int0_flag = 0;
+    led.int0_flag = 0;
   }
   led.sleep(true); //Sleep but leave clock on
 }

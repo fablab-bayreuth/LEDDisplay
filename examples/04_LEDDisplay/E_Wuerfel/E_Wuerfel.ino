@@ -1,6 +1,5 @@
 #include <LEDDisplay.h>
 
-//Create Instance of LEDArray
 LEDDisplay led;
 
 
@@ -9,18 +8,11 @@ LEDDisplay led;
 #include <wuerfel.h>
 
 
-
-volatile uint8_t int0_flag;
-void isr_int0(void) {
-  int0_flag = 1;
-}
-
-
 void setup(void) {
-  led.init(); //Set Pins as OUTPUT
+  led.begin(); 
   /*
      Default Mode of the LED display is
-     "RUNNING_DISPLAY"
+     "FIFO_DISPLAY"
      adding something to the display moves existing
      content to the left
 
@@ -29,8 +21,6 @@ void setup(void) {
      overwrites content on a defined position.
   */
   led.setConf(FIXED_DISPLAY, 160);
-  pinMode(2, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(2), isr_int0, FALLING);
 
 }
 
@@ -41,7 +31,7 @@ uint8_t rot;
 uint8_t wert = 0;
 uint8_t schritt = 9;
 void loop(void) {
-  if (int0_flag) {
+  if (led.int0_flag) {
     if (led.wokeupFromSleep()) {
       randomSeed(millis());
       wert = 1;
@@ -72,12 +62,11 @@ void loop(void) {
           wert = 0;
         }
       }
-
       rot++;
     }
     led.setSpeed();
     led.run();
-    int0_flag = 0;
+    led.int0_flag = 0;
   }
   led.sleep();
 }

@@ -17,34 +17,23 @@ GFXfont* gfxFont = &FreeSerifBold9pt7b;
 
 
 //Create Instance of LEDDisplay
-LEDDisplay led(gfxFont);
+LEDDisplay led;
 
 
-//Your text:
-//There is a hack to support the following UTF8-Chars ä, ö, ü, Ä, Ö, Ü, ß.
-//All other chars will result in "?"
 char text[]="Hallo Welt :-)";
 
 void setup(void){
-  led.init(); //Set Pins as OUTPUT
-  led.add(text); //Add the text to display buffer
-  pinMode(2, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(2), isr_int0, FALLING);
+  led.begin();
+  led.setFont(gfxFont);
+  led.add(text); 
 
-}
-
-
-volatile uint8_t int0_flag;
-void isr_int0(void) {
-  int0_flag=1;
-  
 }
 
 void loop(void){
-  if(int0_flag){
+  if(led.int0_flag){
     led.setSpeed();
     led.run();
-    int0_flag=0;
+    led.int0_flag=0;
   }
   led.sleep();
 }

@@ -14,11 +14,10 @@
 //GFXfont* gfxFont = &FreeSerif9pt7b;
 //GFXfont* gfxFont = &FreeMonoOblique9pt7b;
 GFXfont* gfxFont = &FreeMonoBoldOblique9pt7b;
-//Create Instance of LEDArray
-LEDDisplay led(gfxFont);
+//Create Instance of LEDDisplay
+LEDDisplay led;
 
 
-bool reverse = true;
 int shift_speed = 50;
 uint8_t shift = 1;
 
@@ -103,34 +102,26 @@ Und Gott segnete den siebten Tag und erklärte ihn für heilig; denn an ihm ruht
 ";
 
 void setup(void) {
-  led.init(); //Set Pins as OUTPUT
-  pinMode(2, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(2), isr_int0, FALLING);
+  led.begin(); 
+  led.setFont(gfxFont);
   led.initRunning(shift, shift_speed);
 }
 
-//Interrupt Routine
-volatile uint8_t int0_flag;
-void isr_int0(void) {
-  int0_flag = 1;
-
-}
 
 void loop(void) {
 
-  if (int0_flag) {
+  if (led.int0_flag) {
     //Wenn zwischendruch aufgehört wird zu drehen, mache wir einen
     //Neustart des Textes. Wer das nicht möchte, bitte auskommentieren :-)
     if (led.wokeupFromSleep()) {
       led.clear();
       led.initRunning(shift, shift_speed);
-
     }
 
     led.setSpeed();
     led.runningTextPROGMEM(genesis);
     led.run();
-    int0_flag = 0;
+    led.int0_flag = 0;
   }
   led.sleep();
 }

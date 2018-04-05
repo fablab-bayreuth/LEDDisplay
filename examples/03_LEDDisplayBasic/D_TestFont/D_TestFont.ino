@@ -17,7 +17,7 @@ GFXfont* gfxFont = &FreeSerifBold9pt7b;
 
 
 //Create Instance of LEDDisplay
-LEDDisplay led(gfxFont);
+LEDDisplay led;
 
 
 //Your text:
@@ -26,11 +26,13 @@ LEDDisplay led(gfxFont);
 char text[]="Hallo Welt :-)";
 
 void setup(void){
-  Serial.begin(9600);
-  led.init(); //Set Pins as OUTPUT
+  led.begin(); 
+  led.setFont(gfxFont); //Set Font. Has to be called before adding text
   led.add(text); //Add the text to display buffer
+  
   //This is just for font testing on serial monitor
   //comment if you do not need
+  Serial.begin(9600);
   led.print();
    //end serial
 

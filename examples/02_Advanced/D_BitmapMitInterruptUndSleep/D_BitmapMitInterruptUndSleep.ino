@@ -5,8 +5,8 @@
  * 
  */
 #define WAITTIME_MICROSEC 1000 
-#include <LEDDisplay.h>
-//#include <Sleep.h> // das ist jetzt nicht mehr notwendig, da Sleep.h schon in LEDDisplay.h drin ist :-)
+#include <LEDArray.h>
+#include <Sleep.h> 
 //Create Instance of LEDArray
 LEDArray led;
 

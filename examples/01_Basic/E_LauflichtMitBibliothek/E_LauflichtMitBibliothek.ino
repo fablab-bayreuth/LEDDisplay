@@ -7,7 +7,7 @@
 #define WAITTIME 1000
 
 //Bibliothek einbinden und Objekt erzeugen
-#include <LEDDisplay.h>
+#include <LEDArray.h>
 LEDArray led;
 
 void setup() {

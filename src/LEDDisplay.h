@@ -9,7 +9,7 @@
 #endif
 #include <Arduino.h>
 #include <Sleep.h>
-
+#include <LEDArray.h>
 
 #include <gfxfont.h>
 #include <Fonts/FreeMono9pt7b.h>
@@ -25,26 +25,6 @@
 #include <Fonts/FreeSerifItalic9pt7b.h>
 #include <Fonts/FreeSerifBoldItalic9pt7b.h>
 
-
-const uint8_t LEDArrayPin[] = {4, A0, A1, A2, A3, A4, A5, 13, 12, 11, 10, 9, 8, 7, 6, 5 };
-
-
-
-/*
-LEDArray is the raw device
-it has only functions for setting the LEDs 
-the print methods are for Serial debug
-*/
-class LEDArray {
-
-  public:
-    LEDArray();
-    void set(uint16_t w);
-    void write(uint16_t* w,uint16_t l, uint16_t wt=700,bool reverse=false);
-    void init(void);
-    void print(uint16_t v);
-    void print(uint16_t* w, uint16_t l);
-};
 
 
 /*
@@ -65,8 +45,10 @@ there are some functions for running text and bitmap
 #define CLOCKWISE 0
 #define ANTICLOCKWISE 1
 
-#define RUNNING_DISPLAY 0
+#define FIFO_DISPLAY 0
 #define FIXED_DISPLAY 1
+
+
 
 class LEDDisplay : public LEDArray {
   private: 
@@ -90,19 +72,20 @@ class LEDDisplay : public LEDArray {
     bool _is_done;
     int offset;
     uint16_t last_run_pos;
-   
   public:
+    //INT0 staff
+    static volatile uint8_t int0_flag;
+    static void int0ISR(void);
     /*
      * Constuctor for LEDDisplay
      */
     LEDDisplay();
-    LEDDisplay(const GFXfont *f);
 
     /*
      * init Display:
-     * set PINs as output, read rot_count from EEPROM
+     * set PINs as output, read rot_count from EEPROM, activate INT0
      */
-    void init(void);
+    void begin(void);
 
     /*
      * Set font pointer
@@ -112,7 +95,7 @@ class LEDDisplay : public LEDArray {
     /*
      * Set configuration: this has only to be called, if you want to change the default values
      */
-    void setConf(uint8_t mode=RUNNING_DISPLAY, uint16_t width=PIXELCOUNT, uint8_t dir=ANTICLOCKWISE);
+    void setConf(uint8_t mode=FIFO_DISPLAY, uint16_t width=PIXELCOUNT, uint8_t dir=ANTICLOCKWISE);
 
     /*
      * Set/Get Cursor
@@ -199,6 +182,8 @@ class LEDDisplay : public LEDArray {
     void sleep(bool clock_on=false);
 
     bool wokeupFromSleep(void);
+
+    float getTemperature(void);
 
 };
 

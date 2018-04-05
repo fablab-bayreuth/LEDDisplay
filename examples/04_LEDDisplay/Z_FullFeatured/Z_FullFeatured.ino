@@ -29,7 +29,7 @@ uint16_t rot_mode;
 
 
 //Create Instance of LEDArray
-LEDDisplay led(gfxFont);
+LEDDisplay led;
 
 #include "bitmaps.h"
 #include "anhalter.h"
@@ -40,11 +40,6 @@ LEDDisplay led(gfxFont);
 #include <wuerfel.h>
 
 
-volatile uint8_t int0_flag;
-void isr_int0(void) {
-  int0_flag = 1;
-}
-
 int shift_speed = 50;
 uint8_t shift = 6;
 
@@ -52,21 +47,10 @@ uint8_t shift = 6;
 const char rtext[] PROGMEM = "Fablab Bayreuth --- Arduino Day 2018 --- 07.04.2018";
 uint8_t tshift = 1;
 
-#include <math.h>
-float ntc10_R2T(float r) {
-  float log_r = log(r);
-  return 440.61073 - 75.69303 * log_r +
-         4.20199 * log_r * log_r - 0.09586 * log_r * log_r * log_r;
-}
-
-
 
 void setup(void) {
-  led.init(); //Set Pins as OUTPUT
-
-  //Set up Interrupt
-  pinMode(2, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(2), isr_int0, FALLING);
+  led.begin();
+  led.setFont(gfxFont);
 
   //init timer2 to 1 sec for RTC increment
   Sleep.setupTimer2();
@@ -74,8 +58,8 @@ void setup(void) {
   //Serial clock adjustment stuff
   //Program stays in this loop until INT0 is fired
   Serial.begin(9600);
-  int0_flag = 0;
-  while (! int0_flag) {
+  led.int0_flag = 0;
+  while (! led.int0_flag) {
     Serial.print("Current time: ");
     now2text();
     Serial.println(text);
@@ -113,7 +97,7 @@ uint8_t schritt = 9;
 unsigned long last_int0;
 float temp;
 void loop(void) {
-  if (int0_flag) {
+  if (led.int0_flag) {
     if (led.wokeupFromSleep()) {
       if ((RTC.now().get() - last_int0) > 5) {
         led.clear();
@@ -140,11 +124,7 @@ void loop(void) {
         case 2:
           led.setFont(gfxFont);
           led.add("Temperatur C: ");
-          digitalWrite(13, HIGH);
-          temp = 20000.0 / (1023.0 / analogRead(A6) - 1);
-          digitalWrite(13, LOW);
-          //Umrechnen in Temperatur
-          temp = ntc10_R2T(temp);
+          temp=led.getTemperature();
 
           break;
         case 3:
@@ -340,7 +320,7 @@ void loop(void) {
     //rotations in current mode
     rot_mode++;
 
-    int0_flag = 0;
+    led.int0_flag = 0;
 
   }
   led.sleep(true);//Sleep but leave clock on

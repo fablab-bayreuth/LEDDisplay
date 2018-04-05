@@ -1,6 +1,6 @@
 
 #define WAITTIME_MICROSEC 1000 
-#include <LEDDisplay.h>
+#include <LEDArray.h>
 
 //Create Instance of LEDArray
 LEDArray led;

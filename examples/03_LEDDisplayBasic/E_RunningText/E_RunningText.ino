@@ -9,12 +9,13 @@ GFXfont* gfxFont = &FreeMonoBoldOblique9pt7b;
 LEDDisplay led;
 
 
-int shift_speed = 200;
-uint8_t shift = 2;
+int shift_speed = 70; //Wait minimum 70ms for next shift
+//effectivly this is one shift per rotation
+uint8_t shift = 1; //shift by 1 letter
 
 //The text to display. Text is put in PROGMEM (not in RAM).
 //This allows us to have really big test strings ~ 24kb
-const char text[] PROGMEM = "Zum Aktionstag - ARDUINO DAY 2018 - begrüßt die offene High-Tech-Werkstatt FabLAB-Bayreuth, unsere Oberbürgermeisterin: Frau Brigitte Merk-Erbe!";
+const char text[] PROGMEM = "Fablab Bayreuth -- Arduino Day 2018 - 07.04.2018 -- ab 13:00";
 
 
 void setup(void) {

@@ -10,12 +10,19 @@
 #include <RTClib.h>
 
 
-RTC_Timer2 RTC;
+#define CORR_SEC_COUNT 24000
+#define CORR_DIRECTION -1
 
+RTC_Timer2 RTC;
+volatile unsigned long corr_sec_counter;
 ISR(TIMER2_OVF_vect) {
   RTC._seconds += 1;
+  corr_sec_counter++;
+  if(corr_sec_counter>=CORR_SEC_COUNT){
+    corr_sec_counter=0;
+    RTC._seconds = RTC._seconds + CORR_DIRECTION;
+  }
 }
-
 //GFXfont* gfxFont = &FreeMonoOblique9pt7b;
 GFXfont* gfxFont2 = &FreeMonoBoldOblique9pt7b;
 //GFXfont* gfxFont = &FreeMonoBold9pt7b;

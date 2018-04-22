@@ -4,7 +4,7 @@
    TODO: Lasse die zwei LEDs doch hin und her laufen
 */
 
-#define WAITTIME 1000
+#define WAITTIME 10
 
 //Bibliothek einbinden und Objekt erzeugen
 #include <LEDArray.h>

@@ -18,8 +18,7 @@ GFXfont* gfxFont = &FreeMonoBoldOblique9pt7b;
 LEDDisplay led;
 
 
-int shift_speed = 50;
-uint8_t shift = 1;
+int shift_wait = 70;
 
 //The text to display. Text is put in PROGMEM (not in RAM).
 //This allows us to have really big test strings ~ 24kb
@@ -104,7 +103,7 @@ Und Gott segnete den siebten Tag und erklärte ihn für heilig; denn an ihm ruht
 void setup(void) {
   led.begin(); 
   led.setFont(gfxFont);
-  led.initRunning(shift, shift_speed);
+  led.initRunning(shift_wait);
 }
 
 
@@ -115,7 +114,7 @@ void loop(void) {
     //Neustart des Textes. Wer das nicht möchte, bitte auskommentieren :-)
     if (led.wokeupFromSleep()) {
       led.clear();
-      led.initRunning(shift, shift_speed);
+      led.initRunning(shift_wait);
     }
 
     led.setSpeed();

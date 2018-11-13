@@ -18,8 +18,8 @@ volatile unsigned long corr_sec_counter;
 ISR(TIMER2_OVF_vect) {
   RTC._seconds += 1;
   corr_sec_counter++;
-  if(corr_sec_counter>=CORR_SEC_COUNT){
-    corr_sec_counter=0;
+  if (corr_sec_counter >= CORR_SEC_COUNT) {
+    corr_sec_counter = 0;
     RTC._seconds = RTC._seconds + CORR_DIRECTION;
   }
 }
@@ -39,11 +39,11 @@ uint16_t rot_mode;
 LEDDisplay led;
 
 #include "bitmaps.h"
-#include "anhalter.h"
-#include "genesis_anfang.h"
 #include "rtc_func.h"
 #include "zug_lang.h"
+#include "towerBridge.h"
 #include "pm.h"
+#include "dict.h"
 #include <wuerfel.h>
 
 
@@ -101,6 +101,8 @@ uint8_t wert = 0;
 uint8_t schritt = 9;
 unsigned long last_int0;
 float temp;
+uint8_t res;
+
 void loop(void) {
   if (led.int0_flag) {
     if (led.wokeupFromSleep()) {
@@ -128,9 +130,12 @@ void loop(void) {
           break;
         case 2:
           led.setFont(gfxFont);
-          led.add("Temperatur C: ");
-          temp=led.getTemperature();
-
+          led.add("Temp: ");
+          temp = led.getTemperature();
+          led.addFloat(temp, 4, 1);
+          led.add("C / ");
+          led.addFloat(temp * 9 / 5 + 32, 4, 1);
+          led.add("F ");
           break;
         case 3:
           led.setFont(gfxFont2);
@@ -144,7 +149,7 @@ void loop(void) {
           led.initRunning(shift_wait/6);
           break;
         case 6:
-          led.initRunning(shift_wait);
+          led.initRunning( shift_wait);
           break;
         case 7:
           for (uint16_t i = 0; i < 160; i++) {
@@ -163,20 +168,16 @@ void loop(void) {
           led.clear();
           break;
         case 9:
-          led.setConf();
-          led.initRunning(shift_wait/6);
+          led.setConf(FIXED_DISPLAY, 160);
+          led.setCursor(60);
+          led.addBitmapPROGMEM(towerBridge, 49 * 2);
+
           break;
         case 10:
+          led.setConf();
           led.setFont(gfxFont2);
-          led.initRunning(shift_wait);
-          break;
-        case 12:
-          led.setFont(gfxFont2);
-          led.initRunning(shift_wait);
-          break;
-        case 13:
-          led.setFont(gfxFont2);
-          led.initRunning(shift_wait);
+          led.initRunning( shift_wait);
+          res = dict_next_word();
           break;
 
       }
@@ -199,8 +200,6 @@ void loop(void) {
         if (rot_mode > 30) mode++;
         break;
       case 2:
-        led.setCursor(text_end_pos);
-        led.addFloat(temp, 4, 1);
         if (rot_mode > 30) mode++;
         break;
       case 3:
@@ -214,7 +213,8 @@ void loop(void) {
         if (rot_mode > 30) mode++;
         break;
       case 5:
-        led.runningBitmapPROGMEM(bitmap, bm_length);
+        led.runningBitmapPROGMEM(zug_lang, 522 * 2);
+        //        led.runningBitmapPROGMEM(bitmap, bm_length);
         if (led.isDoneRunning()) {
           mode++;
         }
@@ -282,45 +282,23 @@ void loop(void) {
         }
         break;
       case 9:
-        led.runningBitmapPROGMEM(zug_lang, 522 * 2);
-        if (led.isDoneRunning()) {
-          mode++;
-        }
+        if (rot_mode > 30) mode++;
+
         break;
       case 10:
-        led.runningTextPROGMEM(anhalter1);
+        led.runningText(dict_buffer);
         if (led.isDoneRunning()) {
-          mode++;
+          if (! res) mode++;
+          else
+            res = dict_next_word();
         }
-        break;
-      case 11:
-        if (rot_mode % 4 == 0) {
-          if (rot_mode % 8 == 0) {
-            led.setCursor(0);
-            led.add("DON'T PANIC!!   ");
-          } else led.clear();
-        }
-        if (rot_mode > 60) mode++;
-        break;
-      case 12:
-        led.runningTextPROGMEM(anhalter2);
-        if (led.isDoneRunning()) {
-          mode++;
-        }
-        break;
-      case 13:
-        led.runningTextPROGMEM(genesis);
-        if (led.isDoneRunning()) {
-          mode++;
-        }
-        break;
 
 
     }
     led.run();
 
 
-    if (mode > 13) mode = 0;
+    if (mode > 10) mode = 0;
 
     //rotations in current mode
     rot_mode++;

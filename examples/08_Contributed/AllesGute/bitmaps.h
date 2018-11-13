@@ -1,14 +1,3 @@
-#include <LEDDisplay.h>
-
-LEDDisplay led;
-
-
-int shift_wait = 20;
-
-//The Bitmap to display. Bitmap is put in PROGMEM (not in RAM).
-//This allows us to have really big bitmaps ~ 24kb
-//Bitmap can be create with http://en.radzio.dxp.pl/bitmap_converter/
-
 uint16_t bm_length = 2 * 100; //16x100 bitmap
 const uint8_t bitmap[] PROGMEM = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xC0, 0xFC, 0xFC, 0xC0, 0xC0, 0xC0, 0xC0, 0xC0, 0xE0,
@@ -25,23 +14,4 @@ const uint8_t bitmap[] PROGMEM = {
   0x08, 0x08, 0x08, 0x08, 0x08, 0x78, 0x88, 0x88, 0x88, 0x7C, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
-
-
-
-void setup(void) {
-  led.begin(); //Set Pins as OUTPUT
-  led.initRunning(shift_wait);
-}
-
-
-void loop(void) {
-  if (led.int0_flag) {
-    led.setSpeed();
-    led.runningBitmapPROGMEM(bitmap, bm_length);
-    led.run();
-    led.int0_flag = 0;
-  }
-  led.sleep();
-}
-
 

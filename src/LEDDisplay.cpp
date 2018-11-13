@@ -2,18 +2,17 @@
 
 #include <EEPROM.h>
 
-
 //INT0 staff
-volatile uint8_t LEDDisplay::int0_flag=0;
+volatile uint8_t LEDDisplay::int0_flag = 0;
 
-inline void LEDDisplay::int0ISR(){
-	if(! LEDDisplay::int0_flag)
-		LEDDisplay::int0_flag=1;
+inline void LEDDisplay::int0ISR() {
+	if (!LEDDisplay::int0_flag)
+		LEDDisplay::int0_flag = 1;
 }
 
 ISR(EXT_INT0_vect)
 {
-    LEDDisplay::int0ISR();
+	LEDDisplay::int0ISR();
 }
 
 LEDDisplay::LEDDisplay() {
@@ -24,14 +23,13 @@ LEDDisplay::LEDDisplay() {
 	pixel_count = PIXELCOUNT;
 }
 
-
 void LEDDisplay::begin() {
 	LEDArray::init();
 	readRotationCount();
 	pinMode(2, INPUT_PULLUP);
 	attachInterrupt(digitalPinToInterrupt(2), LEDDisplay::int0ISR, FALLING);
 
-	int0_flag=0;
+	int0_flag = 0;
 }
 
 void LEDDisplay::setFont(const GFXfont *f) {
@@ -68,7 +66,7 @@ void LEDDisplay::add(uint16_t w, uint8_t mode) {
 
 uint8_t LEDDisplay::add(char c, uint8_t mode) {
 	uint8_t width;
-	bool umlaut=true;
+	bool umlaut = true;
 	if (gfxFont == NULL)
 		return 0;
 	if ((uint8_t) c == 0xc3) {
@@ -100,7 +98,7 @@ uint8_t LEDDisplay::add(char c, uint8_t mode) {
 			break;
 		case 0x9f: //ß
 			c = 's';
-			umlaut=false;
+			umlaut = false;
 			break;
 		default:
 			c = '8';
@@ -147,9 +145,9 @@ uint8_t LEDDisplay::add(char c, uint8_t mode) {
 		}
 	}
 	if (_utf8_c) {
-		if (! umlaut) {
-			char_buffer[xo+1] |= 0xfff0 << (9 + yo);
-			char_buffer[xo+2] &= 0x000f << (9 + yo);
+		if (!umlaut) {
+			char_buffer[xo + 1] |= 0xfff0 << (9 + yo);
+			char_buffer[xo + 2] &= 0x000f << (9 + yo);
 		} else {
 			char_buffer[xo] |= 0x1 << (9 + yo);
 			char_buffer[xo + 1] |= 0x1 << (9 + yo);
@@ -286,94 +284,92 @@ void LEDDisplay::print(void) {
 	LEDArray::print(buffer, pixel_count);
 }
 
-void LEDDisplay::initRunning(uint8_t shift, uint16_t shift_wait) {
+void LEDDisplay::initRunning(uint16_t shift_wait) {
 	offset = 0;
-	_shift = shift;
 	_shift_wait = shift_wait;
 	_last_shift = millis();
 	_is_done = false;
 	clear();
 }
 
+void LEDDisplay::initRunning(uint8_t shift, uint16_t shift_wait) {
+	initRunning(shift_wait / shift);
+}
+
 void LEDDisplay::runningText(const char* text) {
 	_is_done = false;
-	if (((uint16_t) millis() - _last_shift) > _shift_wait) {
-		for (uint8_t i = 0; i < _shift; i++) {
-			if (offset >= 0) {
-				if (text[offset]) {
-					while (text[offset] && !add(text[offset])) {
-						offset++;
-					}
-				} else {
-					offset = -100;
-					last_run_pos = current_pos;
-				}
-			} else
-				add(' ');
-			offset++;
 
-			if (_is_done) {
-				offset = 0;
-				break;
+	while (((uint16_t) millis() - _last_shift) > _shift_wait) {
+		if (offset >= 0) {
+			if (text[offset]) {
+				while (text[offset] && !add(text[offset])) {
+					offset++;
+				}
+			} else {
+				offset = -100;
+				last_run_pos = current_pos;
 			}
+		} else
+			add(' ');
+		offset++;
+
+		if (_is_done) {
+			offset = 0;
+			break;
 		}
-		_last_shift = millis();
+		_last_shift += _shift_wait;
 	}
 
 }
 
 void LEDDisplay::runningTextPROGMEM(const char* text) {
 	_is_done = false;
-	if (((uint16_t) millis() - _last_shift) > _shift_wait) {
-		for (uint8_t i = 0; i < _shift; i++) {
-			if (offset >= 0) {
-				char c = pgm_read_byte(text + offset);
+	while (((uint16_t) millis() - _last_shift) > _shift_wait) {
+		if (offset >= 0) {
+			char c = pgm_read_byte(text + offset);
 
-				if (c) {
-					while (!add(c) && c) {
-						offset++;
-						c = pgm_read_byte(text + offset);
-					}
-				} else {
-					offset = -100;
-					last_run_pos = current_pos;
+			if (c) {
+				while (!add(c) && c) {
+					offset++;
+					c = pgm_read_byte(text + offset);
 				}
-			} else
-				add(' ');
-			offset++;
-
-			if (_is_done) {
-				offset = 0;
-				break;
+			} else {
+				offset = -100;
+				last_run_pos = current_pos;
 			}
+		} else
+			add(' ');
+		offset++;
+
+		if (_is_done) {
+			offset = 0;
+			break;
 		}
-		_last_shift = millis();
+		_last_shift += _shift_wait;
 	}
 }
 
 void LEDDisplay::runningBitmapPROGMEM(const uint8_t* bitmap,
 		uint16_t bitmap_length) {
 	_is_done = false;
-	if (((uint16_t) millis() - _last_shift) > _shift_wait) {
-		for (uint8_t i = 0; i < _shift; i++) {
-			uint16_t v = 0;
-			if (offset >= 0 && offset < bitmap_length / 2) {
-				*(((uint8_t*) &v)) = pgm_read_byte(bitmap + offset);
-				*(((uint8_t*) &v) + 1) = pgm_read_byte(
-						bitmap + offset + bitmap_length / 2);
-			} else if (offset == bitmap_length / 2) {
-				offset = -pixel_count;
-				last_run_pos = current_pos;
-			}
-			add(v);
-			offset++;
-
-			if (offset == 0) {
-				_is_done = true;
-				break;
-			}
+	while (((uint16_t) millis() - _last_shift) > _shift_wait) {
+		uint16_t v = 0;
+		if (offset >= 0 && offset < bitmap_length / 2) {
+			*(((uint8_t*) &v)) = pgm_read_byte(bitmap + offset);
+			*(((uint8_t*) &v) + 1) = pgm_read_byte(
+					bitmap + offset + bitmap_length / 2);
+		} else if (offset == bitmap_length / 2) {
+			offset = -pixel_count;
+			last_run_pos = current_pos;
 		}
-		_last_shift = millis();
+		add(v);
+		offset++;
+
+		if (offset == 0) {
+			_is_done = true;
+			break;
+		}
+		_last_shift += _shift_wait;
 	}
 }
 
@@ -399,12 +395,12 @@ bool LEDDisplay::wokeupFromSleep(void) {
 }
 
 #include <math.h>
-float LEDDisplay::getTemperature(void){
-    digitalWrite(13, HIGH);
-    int adc = analogRead(A6);
-    digitalWrite(13, LOW);
-    float log_r = log(20000.0 / (1023.0 / adc - 1));
-    return 440.61073 - 75.69303 * log_r +
-           4.20199 * log_r * log_r - 0.09586 * log_r * log_r * log_r;
+float LEDDisplay::getTemperature(void) {
+	digitalWrite(13, HIGH);
+	int adc = analogRead(A6);
+	digitalWrite(13, LOW);
+	float log_r = log(20000.0 / (1023.0 / adc - 1));
+	return 440.61073 - 75.69303 * log_r + 4.20199 * log_r * log_r
+			- 0.09586 * log_r * log_r * log_r;
 
 }

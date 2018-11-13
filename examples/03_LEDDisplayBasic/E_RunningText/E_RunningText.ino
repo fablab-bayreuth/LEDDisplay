@@ -9,9 +9,7 @@ GFXfont* gfxFont = &FreeMonoBoldOblique9pt7b;
 LEDDisplay led;
 
 
-int shift_speed = 70; //Wait minimum 70ms for next shift
-//effectivly this is one shift per rotation
-uint8_t shift = 1; //shift by 1 letter
+int shift_wait = 70; //70ms for next shift
 
 //The text to display. Text is put in PROGMEM (not in RAM).
 //This allows us to have really big test strings ~ 24kb
@@ -21,14 +19,14 @@ const char text[] PROGMEM = "Fablab Bayreuth -- Arduino Day 2018 - 07.04.2018 --
 void setup(void) {
   led.begin();
   led.setFont(gfxFont);
-  led.initRunning(shift, shift_speed);
+  led.initRunning(shift_wait);
 }
 
 void loop(void) {
   if (led.int0_flag) {
     if (led.wokeupFromSleep()) {
         led.clear();
-        led.initRunning(shift, shift_speed);
+        led.initRunning(shift_wait);
     }
 
     led.setSpeed();

@@ -35,7 +35,7 @@ the add-methods add text or bitmap to the buffer
 
 there are some functions for running text and bitmap
 */
-#define PIXELCOUNT 280
+#define PIXELCOUNT 380
 
 #define MODE_OVERWRITE 0
 #define MODE_ADD 1
@@ -66,7 +66,6 @@ class LEDDisplay : public LEDArray {
     uint8_t _utf8_c;
 
  //Variables for running Text+Bitmap    
-    uint8_t _shift;
     uint16_t _shift_wait;
     uint16_t _last_shift;
     bool _is_done;
@@ -163,7 +162,13 @@ class LEDDisplay : public LEDArray {
      */
 
     /*
-     * Init Running Display: set shift (px) and shift_wait (ms)
+     * Init Running Display:
+     *  shift_wait (ms) for shift of one px or one character
+     */
+    void initRunning(uint16_t shift_wait);
+
+    /*
+     * Old call - depreciated
      */
     void initRunning(uint8_t shift, uint16_t shift_wait);
 

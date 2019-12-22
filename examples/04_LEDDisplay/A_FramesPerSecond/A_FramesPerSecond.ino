@@ -21,9 +21,6 @@ void loop(void){
     led.setCursor(text_end_pos);
     led.addFloat(fps,5,1);
     led.run();
-    led.int0_flag=0;
   }
   led.sleep();
 }
-
-

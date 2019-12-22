@@ -19,7 +19,6 @@ const char text[] PROGMEM = "Fablab Bayreuth -- Arduino Day 2018 - 07.04.2018 --
 void setup(void) {
   led.begin();
   led.setFont(gfxFont);
-  led.initRunning(shift_wait);
 }
 
 void loop(void) {
@@ -32,9 +31,6 @@ void loop(void) {
     led.setSpeed();
     led.runningTextPROGMEM(text);
     led.run();
-    led.int0_flag = 0;
   }
   led.sleep();
 }
-
-

@@ -23,14 +23,10 @@ void loop(void){
     //OPTIONAL
     //Change buffer content
 
-    //Print content with calculated frequency
+    //Print content with calculated frequency and clear int0_flag
     led.run();
-
-    //Clear INT0 flag
-    led.int0_flag=0;
   }
   
   //go to sleep when there is no rotation
   led.sleep();
 }
-

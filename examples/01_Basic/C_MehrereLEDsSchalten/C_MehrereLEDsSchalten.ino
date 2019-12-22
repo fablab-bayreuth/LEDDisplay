@@ -76,7 +76,7 @@ void loop() {
    * binären Form BXXXXXXXX geschrieben werden können.
    */
   
-  schalteLEDs(256*B00001111 + B00000011);
+  schalteLEDs(256*B11111111 + B11111111);
   delay(WAITTIME);              //Warten
 
   schalteLEDs(256*B11001111 + B11000011);

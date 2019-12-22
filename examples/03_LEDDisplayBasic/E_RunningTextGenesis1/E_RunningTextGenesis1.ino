@@ -120,9 +120,6 @@ void loop(void) {
     led.setSpeed();
     led.runningTextPROGMEM(genesis);
     led.run();
-    led.int0_flag = 0;
   }
   led.sleep();
 }
-
-

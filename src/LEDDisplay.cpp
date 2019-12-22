@@ -4,16 +4,21 @@
 
 //INT0 staff
 volatile uint8_t LEDDisplay::int0_flag = 0;
+volatile uint8_t LEDDisplay::int0_millis = 0;
 
-inline void LEDDisplay::int0ISR() {
-	if (!LEDDisplay::int0_flag)
-		LEDDisplay::int0_flag = 1;
+inline void LEDDisplay::int0ISR(void){
+	LEDDisplay::int0_flag=1;
+	LEDDisplay::int0_millis=millis();
 }
 
-ISR(EXT_INT0_vect)
-{
-	LEDDisplay::int0ISR();
+
+void LEDDisplay::begin() {
+	LEDArray::init();
+	readRotationCount();
+	pinMode(2, INPUT_PULLUP);
+	attachInterrupt(digitalPinToInterrupt(2),LEDDisplay::int0ISR,FALLING);
 }
+
 
 LEDDisplay::LEDDisplay() {
 	gfxFont = NULL;
@@ -23,14 +28,6 @@ LEDDisplay::LEDDisplay() {
 	pixel_count = PIXELCOUNT;
 }
 
-void LEDDisplay::begin() {
-	LEDArray::init();
-	readRotationCount();
-	pinMode(2, INPUT_PULLUP);
-	attachInterrupt(digitalPinToInterrupt(2), LEDDisplay::int0ISR, FALLING);
-
-	int0_flag = 0;
-}
 
 void LEDDisplay::setFont(const GFXfont *f) {
 	gfxFont = (GFXfont *) f;
@@ -206,12 +203,13 @@ void LEDDisplay::addInteger(long l, uint8_t mode) {
 
 void LEDDisplay::setSpeed(void) {
 	uint16_t px = pixel_count * 5 / 4;
-	wait = (micros() - last_rot) / px - 16;
+	wait = (micros() - last_rot) / px / (1+_overspeed)  - 16;
 	if (wait * px > 200000L)
 		wait = 200000L / px;
 	last_rot = micros();
 	rot_count++;
 	rot_count_save = true;
+
 }
 
 unsigned long LEDDisplay::getLastRotation(void) {
@@ -267,6 +265,8 @@ void LEDDisplay::clear(uint16_t c) {
 }
 
 void LEDDisplay::run(void) {
+	uint8_t start=millis();
+	int0_millis=start;
 	if (mode == FIFO_DISPLAY) {
 		if (direction == ANTICLOCKWISE) {
 			write(buffer, current_pos, wait, true);
@@ -278,6 +278,9 @@ void LEDDisplay::run(void) {
 	} else {
 		write(buffer, pixel_count, wait, direction == ANTICLOCKWISE);
 	}
+	_overspeed=(int0_millis-start)>40;//There was a INT0 in between!
+	int0_flag=0;
+
 }
 
 void LEDDisplay::print(void) {
@@ -382,7 +385,6 @@ void LEDDisplay::sleep(bool clock_on) {
 		return;
 	//no INT for more than 0.5 sec
 	saveRotationCount();
-
 	if (clock_on)
 		Sleep.sleep(TIMER2_ON, SLEEP_MODE_PWR_SAVE);
 	else

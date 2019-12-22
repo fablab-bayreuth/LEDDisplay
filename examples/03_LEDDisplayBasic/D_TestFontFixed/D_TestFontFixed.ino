@@ -33,8 +33,6 @@ void loop(void){
   if(led.int0_flag){
     led.setSpeed();
     led.run();
-    led.int0_flag=0;
   }
   led.sleep();
 }
-

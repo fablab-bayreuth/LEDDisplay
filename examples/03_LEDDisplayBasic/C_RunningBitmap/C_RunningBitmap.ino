@@ -39,9 +39,6 @@ void loop(void) {
     led.setSpeed();
     led.runningBitmapPROGMEM(bitmap, bm_length);
     led.run();
-    led.int0_flag = 0;
   }
   led.sleep();
 }
-
-

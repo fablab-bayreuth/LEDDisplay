@@ -18,7 +18,6 @@ void loop() {
     led.setCursor(text_end_pos);
     led.addFloat(temp, 5, 1);
     led.run();
-    led.int0_flag = 0;
   }
   led.sleep();
 

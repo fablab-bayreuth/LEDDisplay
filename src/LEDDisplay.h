@@ -26,14 +26,17 @@
 #include <Fonts/FreeSerifBoldItalic9pt7b.h>
 
 
-
 /*
 This is the LEDDisplay class. It has a big buffer 16x280 Bits
-the run-method flushes the buffer to the leds
+the run-method flushes the buffer to the LEDs
 
-the add-methods add text or bitmap to the buffer
+The add-methods add text or bitmap to the buffer.
+Default operation of the buffer is FIFO_DISPLAY (first in first out).
+Alternative operation is FIXED_DISPLAY. With FIXED_DISPLAY use setCursor
+to write to a desired position.
+Default add-mode is MODE_OVERWRITE. Alternative modes are MODE_ADD and MODE_SUBSTRACT
 
-there are some functions for running text and bitmap
+There are some functions for modifying the buffer with running text and bitmap.
 */
 #define PIXELCOUNT 380
 
@@ -54,8 +57,8 @@ class LEDDisplay : public LEDArray {
   private: 
     uint16_t buffer[PIXELCOUNT];
     char cbuffer[12];
-    uint16_t current_pos;
-    uint16_t pixel_count;
+    uint16_t current_pos; //Current pixel pos
+    uint16_t pixel_count; //number of pixels (x axis)
     GFXfont* gfxFont;
     unsigned long wait;
     unsigned long last_rot;
@@ -68,12 +71,14 @@ class LEDDisplay : public LEDArray {
  //Variables for running Text+Bitmap    
     uint16_t _shift_wait;
     uint16_t _last_shift;
-    bool _is_done;
-    int offset;
-    uint16_t last_run_pos;
+    bool _is_done; //get's set when add method reaches last_run_pos again
+    bool _overspeed; //defection flag for overspeed (int0 occurs during run()
+    int offset; //current offset in text-array - negative when end was reached
+    uint16_t last_run_pos; //store current_pos - necessary to shift out text
   public:
     //INT0 staff
     static volatile uint8_t int0_flag;
+    static volatile uint8_t int0_millis;
     static void int0ISR(void);
     /*
      * Constuctor for LEDDisplay
@@ -173,24 +178,36 @@ class LEDDisplay : public LEDArray {
     void initRunning(uint8_t shift, uint16_t shift_wait);
 
     /*
-     * returns true, when content shifing is done
+     * returns true, when content shifting is done
      */
     bool isDoneRunning(void);
 
     /*
-     * Methods for fetching and adding conent in a continuous mode
+     * Methods for fetching and adding content in a continuous mode
      */
     void runningText(const char* text);
     void runningTextPROGMEM(const char* text);
     void runningBitmapPROGMEM(const uint8_t* bitmap, uint16_t bitmap_length);
     
+    /*
+     * Sleep when last interrupt is more than 500ms ago
+     * will save rot_count to EEPROM if necessary
+     */
     void sleep(bool clock_on=false);
 
+    /*
+     * Indicates that we are directly woke up from sleep
+     */
     bool wokeupFromSleep(void);
 
+    /*
+     * read the NTC sensor and return temperature value
+     */
     float getTemperature(void);
 
 };
+
+
 
 
 #endif

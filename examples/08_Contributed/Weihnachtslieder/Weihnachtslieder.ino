@@ -124,10 +124,7 @@ void loop(void) {
     //rotations in current mode
     rot_mode++;
 
-    led.int0_flag = 0;
 
   }
   led.sleep();//Sleep
 }
-
-

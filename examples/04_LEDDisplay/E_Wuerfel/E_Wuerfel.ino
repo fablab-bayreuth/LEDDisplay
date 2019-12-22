@@ -39,6 +39,7 @@ void loop(void) {
       schritt = 9;
       led.clear();
     }
+    led.setSpeed();
     if (wert) {
       led.setCursor(pos);
       led.clear(10);
@@ -64,11 +65,7 @@ void loop(void) {
       }
       rot++;
     }
-    led.setSpeed();
     led.run();
-    led.int0_flag = 0;
   }
   led.sleep();
 }
-
-

@@ -4,7 +4,7 @@
  * TODO: Mache doch mal die Wartezeit kürzer und schaue was passiert.
  */
 
-#define WAITTIME 1000
+#define WAITTIME 100
 
 
 //Die LED Pin in von Oben nach Unten

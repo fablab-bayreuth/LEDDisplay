@@ -3,7 +3,7 @@ Arduino library for rotating LED display.
 
 ![Clock example](https://github.com/fablab-bayreuth/LEDDisplay/blob/master/extra/clock.png)
 
-The LED Display board is a simple Arduino clone with a ATMega328p processor, 32768Hz RTC crystal, 16 LEDs and an reed switch.
+The LED Display board is a simple Arduino clone with a ATMega328p processor, 32768Hz RTC crystal, 16 LEDs and a reed switch.
 
 Fonts are included from the Adafruit GFX library, which can be installed via Arduino library manager.
 
@@ -17,7 +17,7 @@ Connect the board to your PC with a FTDI adapter.
 Choose "Arduino Pro or Pro Mini" as Board and "ATMEGA328P (3.3V,8MHz)" as processor.
 
 ## Usage
-A typical example sketch for having a bitmap running over the display looks like this:
+A typical example sketch for having a text running over the display looks like this:
 
 	#include <LEDDisplay.h>
 
@@ -31,27 +31,25 @@ A typical example sketch for having a bitmap running over the display looks like
 	int shift_wait = 70; //70ms for next shift
 
 	//The text to display. Text is put in PROGMEM (not in RAM).
-	//This allows us to have really big test strings ~ 24kb
+	//This allows us to have really big text strings ~ 24kb
 	const char text[] PROGMEM = "Fablab Bayreuth -- Arduino Day 2018 - 07.04.2018 -- ab 13:00";
 
 	void setup(void) {
-  		led.begin();
-  		led.setFont(gfxFont);
-  		led.initRunning(shift_wait);
+  		led.begin(); //initialize display (e.g. attach INT0)
+  		led.setFont(gfxFont); //set font pointer
 	}
 
 	void loop(void) {
   		if (led.int0_flag) {
     		if (led.wokeupFromSleep()) {
-        		led.clear();
-        		led.initRunning(shift_wait);
+        		led.clear(); //clear the display
+        		led.initRunning(shift_wait); //set shift_wait and set offset to zero
     		}
-		    led.setSpeed();
-    		led.runningTextPROGMEM(text);
-    		led.run();
-    		led.int0_flag = 0;
+		    led.setSpeed();//calculates the speed to flash the LEDs
+    		led.runningTextPROGMEM(text);//add new char to the buffer if shift time is exceeded 
+    		led.run(); //flashes the LEDs and clears int0_flag at the end
   		}
-  		led.sleep();
+  		led.sleep(); //go to sleep when there is no int0 for more than 500ms
 	}
 
 

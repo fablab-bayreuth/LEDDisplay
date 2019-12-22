@@ -98,10 +98,6 @@ void loop(void) {
     led.setCursor(0);
     led.add(text);
     led.run();
-    //clear INT0 flag
-    led.int0_flag = 0;
   }
   led.sleep(true); //Sleep but leave clock on
 }
-
-
